@@ -15,6 +15,22 @@ dist-ssr
 .env
 .env.*
 !.env.example
+.envrc
+.direnv/
+
+# Claves y archivos típicos de secretos
+*.pem
+*.key
+*_rsa
+*_rsa.pub
+*.p12
+*.pfx
+.secrets/
+**/credentials.json
+**/serviceAccount*.json
+
+# NPM auth (suele contener token; si no usa auth privado, puede borrar esta línea)
+.npmrc
 
 # Vite / herramientas
 *.local
