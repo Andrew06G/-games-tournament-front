@@ -27,7 +27,7 @@ type FormatoCatalogo = {
   requiereFaseGrupos: boolean | null;
 };
 
-const CUPOS = [8, 16, 32, 64] as const;
+const CUPOS = [2, 4, 8, 16, 32] as const;
 
 function estadoBadge(estado: string | null | undefined): {
   cls: string;
@@ -76,6 +76,7 @@ export default function CrearTorneoWorkspace({
   const [fechaInicio, setFechaInicio] = useState("");
   const [participants, setParticipants] = useState<number | "">("");
   const [busy, setBusy] = useState(false);
+  const [fasePreview, setFasePreview] = useState<string>("");
 
   const { data: catalogos, isPending: catalogosPending } = useQuery({
     queryKey: ["catalogos"],
@@ -198,9 +199,10 @@ export default function CrearTorneoWorkspace({
         >
           <p className="font-semibold">Vista del formulario (solo lectura)</p>
           <p className="mt-1 text-amber-900">
-            Para activar la creación de torneos su usuario debe tener el rol{" "}
-            <strong>organizador</strong> en la base de datos. Puede seguir
-            explorando competiciones.
+            Para crear torneos necesita el rol global{" "}
+            <strong>organizador</strong>. Puede cerrar sesión y registrarse de
+            nuevo eligiendo ese rol, o pedir a un administrador que se lo
+            asigne en la base de datos.
           </p>
           <Link
             to="/torneos"
@@ -318,7 +320,7 @@ export default function CrearTorneoWorkspace({
                   className="mb-2 block text-sm font-semibold"
                   htmlFor="participants"
                 >
-                  Número de Participantes{" "}
+                  Cupo de equipos (eliminatoria){" "}
                   <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -327,9 +329,22 @@ export default function CrearTorneoWorkspace({
                   disabled={formDisabled}
                   className={inputClass}
                   value={participants === "" ? "" : String(participants)}
-                  onChange={(ev) => {
+                  onChange={async (ev) => {
                     const v = ev.target.value;
-                    setParticipants(v === "" ? "" : Number(v));
+                    const n = v === "" ? "" : Number(v);
+                    setParticipants(n);
+                    if (typeof n === "number") {
+                      try {
+                        const { data } = await api.get<{
+                          fase: { nombre: string };
+                        }>(`/catalogos/fase-inicial-por-cupo/${n}`);
+                        setFasePreview(data.fase.nombre);
+                      } catch {
+                        setFasePreview("");
+                      }
+                    } else {
+                      setFasePreview("");
+                    }
                   }}
                 >
                   <option value="" disabled>
@@ -337,10 +352,20 @@ export default function CrearTorneoWorkspace({
                   </option>
                   {CUPOS.map((n) => (
                     <option key={n} value={n}>
-                      {n}
+                      {n} equipos
                     </option>
                   ))}
                 </select>
+                {fasePreview ? (
+                  <p className="mt-2 text-xs text-slate-600">
+                    Fase inicial automática:{" "}
+                    <strong className="text-black">{fasePreview}</strong>
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-slate-400">
+                    La fase inicial se calcula según el cupo (2→Final, 8→Cuartos, etc.).
+                  </p>
+                )}
               </div>
             </div>
 

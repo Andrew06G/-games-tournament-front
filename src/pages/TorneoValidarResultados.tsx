@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate, useParams } from "react-router-dom";
+import {
+  torneoBloqueaPartidas,
+} from "../lib/bracketHelpers";
 import toast from "react-hot-toast";
 import { isAxiosError } from "axios";
 import ArenaHeader from "../components/layout/ArenaHeader";
@@ -68,6 +71,7 @@ export default function TorneoValidarResultados() {
       toast.success("Resultado validado");
       await queryClient.invalidateQueries({ queryKey: ["torneo", torneoId] });
       await queryClient.invalidateQueries({ queryKey: ["bracket", torneoId] });
+      await queryClient.invalidateQueries({ queryKey: ["torneos"] });
     },
     onError: (err) => {
       const msg = isAxiosError(err)
@@ -91,11 +95,7 @@ export default function TorneoValidarResultados() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] font-sans text-[#1b1b1b]">
-      <ArenaHeader
-        active="resultados"
-        torneoContextId={torneoId}
-        bg="white"
-      />
+      <ArenaHeader active="torneos" bg="white" />
 
       <main className="mx-auto max-w-3xl px-6 py-12">
         <p className="mb-6 text-sm">
@@ -130,12 +130,26 @@ export default function TorneoValidarResultados() {
               >
                 <p className="text-xs uppercase text-[#5c5f60]">{e.fase}</p>
                 <p className="mt-1 text-lg font-semibold">
-                  {e.equipo1?.nombreEquipo} {r.puntosEquipo1 ?? "—"} —{" "}
-                  {r.puntosEquipo2 ?? "—"} {e.equipo2?.nombreEquipo}
+                  {e.equipo1?.nombreEquipo}{" "}
+                  <span className="text-[#5c5f60]">
+                    ({r.puntosEquipo1 ?? "—"})
+                  </span>{" "}
+                  —{" "}
+                  <span className="text-[#5c5f60]">
+                    ({r.puntosEquipo2 ?? "—"})
+                  </span>{" "}
+                  {e.equipo2?.nombreEquipo}
                 </p>
                 <button
                   type="button"
-                  disabled={validar.isPending}
+                  disabled={
+                    validar.isPending || torneoBloqueaPartidas(torneo?.estado)
+                  }
+                  title={
+                    torneoBloqueaPartidas(torneo?.estado)
+                      ? "Torneo finalizado"
+                      : undefined
+                  }
                   className="mt-4 rounded-lg bg-black px-6 py-2 text-sm font-bold text-white disabled:opacity-50"
                   onClick={() => validar.mutate(r.idResultado)}
                 >

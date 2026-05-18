@@ -1,210 +1,150 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { isAxiosError } from "axios";
 import ArenaHeader from "../components/layout/ArenaHeader";
-import NuevoEnfrentamientoModal, {
-  type NuevoEnfrentamientoModalData,
-} from "../components/modals/NuevoEnfrentamientoModal";
-import type { TorneoResumen } from "../components/torneo/TorneoCard";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
-const PREFS_KEY = "arena-notif-prefs";
-const NOTIFS_KEY = "arena-notif-inbox";
+type PrefsApi = {
+  notifNuevoEnfrentamiento: boolean | null;
+  notifResultadoValidado: boolean | null;
+  notifCambioFase: boolean | null;
+  notifRecordatorio: boolean | null;
+  canalPreferido: string | null;
+};
 
-type Prefs = {
+type PrefsUi = {
   enfrentamientos: boolean;
   resultados: boolean;
   fases: boolean;
-  push: boolean;
+  recordatorio: boolean;
+  app: boolean;
   email: boolean;
 };
 
-const defaultPrefs: Prefs = {
+function apiToUi(p: PrefsApi): PrefsUi {
+  const canal = p.canalPreferido ?? "app";
+  return {
+    enfrentamientos: p.notifNuevoEnfrentamiento !== false,
+    resultados: p.notifResultadoValidado !== false,
+    fases: p.notifCambioFase !== false,
+    recordatorio: p.notifRecordatorio !== false,
+    app: canal === "app" || canal === "ambos",
+    email: canal === "email" || canal === "ambos",
+  };
+}
+
+function uiToApi(p: PrefsUi): Partial<PrefsApi> {
+  let canalPreferido: "app" | "email" | "ambos" = "app";
+  if (p.app && p.email) canalPreferido = "ambos";
+  else if (p.email) canalPreferido = "email";
+  else canalPreferido = "app";
+  return {
+    notifNuevoEnfrentamiento: p.enfrentamientos,
+    notifResultadoValidado: p.resultados,
+    notifCambioFase: p.fases,
+    notifRecordatorio: p.recordatorio,
+    canalPreferido,
+  };
+}
+
+const defaultPrefs: PrefsUi = {
   enfrentamientos: true,
   resultados: true,
   fases: true,
-  push: true,
+  recordatorio: true,
+  app: true,
   email: false,
 };
 
-type InboxItem = {
-  id: string;
+type NotifApi = {
+  idNotificacion: number;
+  tipoNotificacion: string;
   titulo: string;
-  cuerpo: string;
-  leido: boolean;
-  en: string;
+  mensaje: string;
+  idTorneo: number | null;
+  idEnfrentamiento: number | null;
+  fechaEnvio: string;
+  leida: boolean;
 };
 
-function loadPrefs(): Prefs {
-  try {
-    const raw = localStorage.getItem(PREFS_KEY);
-    if (!raw) return defaultPrefs;
-    return { ...defaultPrefs, ...JSON.parse(raw) };
-  } catch {
-    return defaultPrefs;
+function iconForTipo(tipo: string) {
+  switch (tipo) {
+    case "enfrentamiento_asignado":
+      return "sports_esports";
+    case "resultado_publicado":
+      return "scoreboard";
+    case "torneo_inicio":
+    case "torneo_fin":
+      return "emoji_events";
+    default:
+      return "notifications";
   }
 }
-
-function loadInbox(): InboxItem[] {
-  try {
-    const raw = localStorage.getItem(NOTIFS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as InboxItem[];
-  } catch {
-    return [];
-  }
-}
-
-type EquipoOpt = {
-  idEquipo: number;
-  nombreEquipo: string;
-};
-
-type TorneoDetalleEquipos = {
-  idTorneo: number;
-  nombre: string;
-  equipos: EquipoOpt[];
-};
 
 export default function Notificaciones() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
-  const [inbox, setInbox] = useState<InboxItem[]>(loadInbox);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalData, setModalData] = useState<NuevoEnfrentamientoModalData | null>(
-    null,
-  );
+  const [prefs, setPrefs] = useState<PrefsUi>(defaultPrefs);
 
-  const [torneoId, setTorneoId] = useState<number | "">("");
-  const [fase, setFase] = useState("Cuartos de Final");
-  const [fechaProgramada, setFechaProgramada] = useState("");
-  const [idEquipo1, setIdEquipo1] = useState<number | "">("");
-  const [idEquipo2, setIdEquipo2] = useState<number | "">("");
-
-  const esOrganizador = user?.globalRoles.includes("organizador") ?? false;
-
-  const { data: torneos } = useQuery({
-    queryKey: ["torneos"],
+  const prefsQ = useQuery({
+    queryKey: ["notif-preferencias"],
+    enabled: Boolean(user),
     queryFn: async () => {
-      const { data } = await api.get<{ torneos: TorneoResumen[] }>("/torneos");
-      return data.torneos;
-    },
-  });
-
-  const misTorneos = useMemo(() => {
-    if (!torneos || !user) return [];
-    if (user.globalRoles.includes("organizador")) return torneos;
-    return torneos.filter((t) => t.organizador?.idUsuario === user.idUsuario);
-  }, [torneos, user]);
-
-  const { data: torneoDetalle } = useQuery({
-    queryKey: ["torneo", torneoId],
-    enabled: typeof torneoId === "number" && torneoId > 0,
-    queryFn: async () => {
-      const { data } = await api.get<{ torneo: TorneoDetalleEquipos }>(
-        `/torneos/${torneoId}`,
+      const { data } = await api.get<{ preferencias: PrefsApi }>(
+        "/notificaciones/preferencias",
       );
-      return data.torneo;
+      return apiToUi(data.preferencias);
     },
   });
 
   useEffect(() => {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
-  }, [prefs]);
+    if (prefsQ.data) setPrefs(prefsQ.data);
+  }, [prefsQ.data]);
 
-  useEffect(() => {
-    localStorage.setItem(NOTIFS_KEY, JSON.stringify(inbox));
-  }, [inbox]);
+  const guardarPrefs = useMutation({
+    mutationFn: async (next: PrefsUi) => {
+      await api.put("/notificaciones/preferencias", uiToApi(next));
+    },
+    onError: () => toast.error("No se pudieron guardar las preferencias"),
+  });
 
-  const crearEnfrentamiento = useMutation({
-    mutationFn: async () => {
-      if (typeof torneoId !== "number") throw new Error("Torneo");
-      const body: Record<string, unknown> = {
-        fase: fase.trim(),
-        fechaProgramada:
-          fechaProgramada.trim() === ""
-            ? undefined
-            : new Date(fechaProgramada).toISOString(),
-      };
-      if (typeof idEquipo1 === "number") body.idEquipo1 = idEquipo1;
-      if (typeof idEquipo2 === "number") body.idEquipo2 = idEquipo2;
-      const { data } = await api.post<{
-        enfrentamiento: {
-          idEnfrentamiento: number;
-          fase: string;
-          fechaProgramada: string | null;
-          equipo1: { nombreEquipo: string } | null;
-          equipo2: { nombreEquipo: string } | null;
-        };
-      }>(`/torneos/${torneoId}/enfrentamientos`, body);
-      return data.enfrentamiento;
+  const inboxQ = useQuery({
+    queryKey: ["notificaciones"],
+    queryFn: async () => {
+      const { data } = await api.get<{ notificaciones: NotifApi[] }>(
+        "/notificaciones",
+      );
+      return data.notificaciones;
     },
-    onSuccess: (enf) => {
-      const tNombre =
-        torneoDetalle?.nombre ??
-        misTorneos.find((x) => x.idTorneo === torneoId)?.nombre ??
-        "Torneo";
-      const notif: InboxItem = {
-        id: `enf-${enf.idEnfrentamiento}-${Date.now()}`,
-        titulo: "Nuevo enfrentamiento",
-        cuerpo: `Partida programada: ${enf.equipo1?.nombreEquipo ?? "—"} vs ${enf.equipo2?.nombreEquipo ?? "—"} (${enf.fase}).`,
-        leido: false,
-        en: new Date().toISOString(),
-      };
-      setInbox((prev) => [notif, ...prev]);
-      setModalData({
-        idTorneo: typeof torneoId === "number" ? torneoId : 0,
-        idEnfrentamiento: enf.idEnfrentamiento,
-        torneoNombre: tNombre,
-        fase: enf.fase,
-        nombreEquipo1: enf.equipo1?.nombreEquipo ?? null,
-        nombreEquipo2: enf.equipo2?.nombreEquipo ?? null,
-        fechaProgramada: enf.fechaProgramada,
-      });
-      setModalOpen(true);
-      queryClient.invalidateQueries({ queryKey: ["torneo", torneoId] });
-      queryClient.invalidateQueries({ queryKey: ["torneos"] });
-      queryClient.invalidateQueries({ queryKey: ["bracket", torneoId] });
-      toast.success("Enfrentamiento creado");
+    enabled: Boolean(user),
+  });
+
+  const marcarLeidaM = useMutation({
+    mutationFn: async (id: number) => {
+      await api.put(`/notificaciones/${id}/leer`);
     },
-    onError: (err) => {
-      const msg = isAxiosError(err)
-        ? (err.response?.data as { error?: string })?.error ?? err.message
-        : "Error al crear";
-      toast.error(msg);
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["notificaciones"] });
+    },
+    onError: () => {
+      toast.error("No se pudo marcar como leída");
     },
   });
 
-  const togglePref = useCallback(
-    (k: keyof Prefs) => {
-      setPrefs((p) => ({ ...p, [k]: !p[k] }));
-    },
-    [],
-  );
+  const togglePref = useCallback((k: keyof PrefsUi) => {
+    setPrefs((p) => {
+      const next = { ...p, [k]: !p[k] };
+      guardarPrefs.mutate(next);
+      return next;
+    });
+  }, [guardarPrefs]);
 
-  const marcarLeido = (id: string) => {
-    setInbox((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, leido: true } : n)),
-    );
-  };
-
-  const equiposOpts = torneoDetalle?.equipos ?? [];
+  const inbox = inboxQ.data ?? [];
 
   return (
     <div className="min-h-screen bg-[#f9f9f9] font-sans text-[#1b1b1b]">
-      <NuevoEnfrentamientoModal
-        open={modalOpen}
-        data={modalData}
-        onClose={() => {
-          setModalOpen(false);
-          setModalData(null);
-        }}
-      />
-
       <ArenaHeader active="notificaciones" bg="gray" />
 
       <main className="mx-auto max-w-7xl px-6 py-12 md:px-10">
@@ -213,166 +153,90 @@ export default function Notificaciones() {
             Centro de notificaciones
           </h1>
           <p className="text-base text-[#5c5f60]">
-            Gestiona tus alertas y preferencias de competición.
+            Alertas de enfrentamientos, resultados y estado del torneo.
+          </p>
+          <p className="mt-2 text-sm text-[#5c5f60]">
+            Para crear enfrentamientos, abra un torneo en{" "}
+            <Link to="/torneos" className="font-semibold text-black underline">
+              Torneos
+            </Link>{" "}
+            y use la opción «Crear enfrentamiento» (organizadores).
           </p>
         </header>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           <div className="flex flex-col gap-4 lg:col-span-8">
-            {esOrganizador ? (
-              <section className="rounded-xl border border-[#cfc4c5] bg-white p-6 shadow-sm">
-                <h2 className="mb-1 text-lg font-semibold text-black">
-                  Programar enfrentamiento
-                </h2>
-                <p className="mb-6 text-sm text-[#5c5f60]">
-                  Tras crearlo, verás el aviso tipo modal (prototipo) y quedará
-                  registrado en tu bandeja local.
-                </p>
-                <form
-                  className="grid gap-4 sm:grid-cols-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (typeof torneoId !== "number") {
-                      toast.error("Seleccione un torneo");
-                      return;
-                    }
-                    if (!fase.trim()) {
-                      toast.error("Indique la fase");
-                      return;
-                    }
-                    crearEnfrentamiento.mutate();
-                  }}
-                >
-                  <label className="flex flex-col gap-1 sm:col-span-2">
-                    <span className="text-sm font-semibold">Torneo</span>
-                    <select
-                      required
-                      className="rounded-lg border border-[#cfc4c5] bg-white px-3 py-2"
-                      value={torneoId === "" ? "" : String(torneoId)}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setTorneoId(v === "" ? "" : Number(v));
-                        setIdEquipo1("");
-                        setIdEquipo2("");
-                      }}
-                    >
-                      <option value="">Seleccione…</option>
-                      {misTorneos.map((t) => (
-                        <option key={t.idTorneo} value={t.idTorneo}>
-                          {t.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold">Fase</span>
-                    <input
-                      className="rounded-lg border border-[#cfc4c5] px-3 py-2"
-                      value={fase}
-                      onChange={(e) => setFase(e.target.value)}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold">
-                      Fecha y hora (opcional)
-                    </span>
-                    <input
-                      type="datetime-local"
-                      className="rounded-lg border border-[#cfc4c5] px-3 py-2"
-                      value={fechaProgramada}
-                      onChange={(e) => setFechaProgramada(e.target.value)}
-                    />
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold">Equipo A</span>
-                    <select
-                      className="rounded-lg border border-[#cfc4c5] px-3 py-2"
-                      value={idEquipo1 === "" ? "" : String(idEquipo1)}
-                      onChange={(e) =>
-                        setIdEquipo1(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
-                      }
-                    >
-                      <option value="">Opcional</option>
-                      {equiposOpts.map((eq) => (
-                        <option key={eq.idEquipo} value={eq.idEquipo}>
-                          {eq.nombreEquipo}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold">Equipo B</span>
-                    <select
-                      className="rounded-lg border border-[#cfc4c5] px-3 py-2"
-                      value={idEquipo2 === "" ? "" : String(idEquipo2)}
-                      onChange={(e) =>
-                        setIdEquipo2(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
-                      }
-                    >
-                      <option value="">Opcional</option>
-                      {equiposOpts.map((eq) => (
-                        <option key={eq.idEquipo} value={eq.idEquipo}>
-                          {eq.nombreEquipo}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <div className="sm:col-span-2">
-                    <button
-                      type="submit"
-                      disabled={crearEnfrentamiento.isPending}
-                      className="rounded-lg bg-black px-6 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                    >
-                      {crearEnfrentamiento.isPending
-                        ? "Creando…"
-                        : "Crear enfrentamiento"}
-                    </button>
-                  </div>
-                </form>
-              </section>
-            ) : null}
-
-            {inbox.length === 0 ? (
+            {!user ? (
               <p className="rounded-xl border border-dashed border-[#cfc4c5] bg-white p-8 text-center text-[#5c5f60]">
-                No hay notificaciones guardadas en este dispositivo. Al
-                programar un enfrentamiento como organizador, aparecerán aquí.
+                <Link to="/login" className="font-semibold text-black underline">
+                  Inicia sesión
+                </Link>{" "}
+                para ver tus notificaciones.
+              </p>
+            ) : inboxQ.isPending ? (
+              <p className="text-[#5c5f60]">Cargando notificaciones…</p>
+            ) : inboxQ.isError ? (
+              <p className="text-red-600" role="alert">
+                No se pudieron cargar las notificaciones.
+              </p>
+            ) : inbox.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-[#cfc4c5] bg-white p-8 text-center text-[#5c5f60]">
+                No tienes notificaciones por ahora.
               </p>
             ) : (
               inbox.map((n) => (
                 <article
-                  key={n.id}
+                  key={n.idNotificacion}
                   className={`flex gap-4 rounded-xl border border-[#cfc4c5] p-6 shadow-sm ${
-                    n.leido ? "border-opacity-60 bg-[#f9f9f9] opacity-80" : "bg-white"
+                    n.leida ? "border-opacity-60 bg-[#f9f9f9] opacity-80" : "bg-white"
                   }`}
                 >
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-black text-white">
                     <span className="material-symbols-outlined text-2xl">
-                      sports_esports
+                      {iconForTipo(n.tipoNotificacion)}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                       <span className="font-semibold text-black">{n.titulo}</span>
                       <span className="text-xs text-[#5c5f60]">
-                        {new Date(n.en).toLocaleString("es")}
+                        {new Date(n.fechaEnvio).toLocaleString("es")}
                       </span>
                     </div>
-                    <p className="text-sm text-[#1b1b1b]">{n.cuerpo}</p>
-                    {!n.leido ? (
+                    <p className="text-sm text-[#1b1b1b]">{n.mensaje}</p>
+                    {n.idTorneo ? (
+                      <p className="mt-2 text-xs text-[#5c5f60]">
+                        <Link
+                          className="font-semibold text-black underline"
+                          to={`/torneos/${n.idTorneo}/bracket`}
+                        >
+                          Ver torneo
+                        </Link>
+                        {n.idEnfrentamiento ? (
+                          <>
+                            {" · "}
+                            <Link
+                              className="font-semibold text-black underline"
+                              to={`/torneos/${n.idTorneo}/registrar-resultado`}
+                            >
+                              Resultados
+                            </Link>
+                          </>
+                        ) : null}
+                      </p>
+                    ) : null}
+                    {!n.leida ? (
                       <button
                         type="button"
-                        className="mt-3 rounded border border-[#cfc4c5] px-3 py-1 text-xs font-semibold hover:bg-[#f3f3f3]"
-                        onClick={() => marcarLeido(n.id)}
+                        disabled={marcarLeidaM.isPending}
+                        className="mt-3 rounded border border-[#cfc4c5] px-3 py-1 text-xs font-semibold hover:bg-[#f3f3f3] disabled:opacity-50"
+                        onClick={() => marcarLeidaM.mutate(n.idNotificacion)}
                       >
                         Marcar como leído
                       </button>
                     ) : null}
                   </div>
-                  {!n.leido ? (
+                  {!n.leida ? (
                     <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-black" />
                   ) : null}
                 </article>
@@ -384,8 +248,9 @@ export default function Notificaciones() {
                 info
               </span>
               <p className="text-sm text-[#606365]">
-                Las notificaciones locales se guardan en el navegador; el
-                backend puede ampliarse luego con notificaciones persistentes.
+                Las notificaciones se guardan en el servidor y se envían al
+                asignar enfrentamientos, publicar resultados validados, o al
+                iniciar o finalizar un torneo.
               </p>
             </div>
           </div>
@@ -395,7 +260,8 @@ export default function Notificaciones() {
               <div>
                 <h2 className="text-lg font-semibold text-black">Preferencias</h2>
                 <p className="mt-1 text-sm text-[#5c5f60]">
-                  Personaliza cómo recibes tus alertas (solo en este navegador).
+                  Preferencias guardadas en tu cuenta. El correo se simula en
+                  consola del servidor si no hay SMTP configurado.
                 </p>
               </div>
 
@@ -403,7 +269,8 @@ export default function Notificaciones() {
                 [
                   ["enfrentamientos", "Enfrentamientos", "Nuevos emparejamientos"],
                   ["resultados", "Resultados", "Validación y marcador"],
-                  ["fases", "Nuevas fases", "Grupos, brackets y finales"],
+                  ["fases", "Nuevas fases", "Inicio y fin de torneo"],
+                  ["recordatorio", "Recordatorios", "Avisos programados"],
                 ] as const
               ).map(([key, label, sub]) => (
                 <div
@@ -440,11 +307,11 @@ export default function Notificaciones() {
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={prefs.push}
-                      onChange={() => togglePref("push")}
+                      checked={prefs.app}
+                      onChange={() => togglePref("app")}
                       className="rounded border-[#cfc4c5] text-black focus:ring-black"
                     />
-                    <span className="text-sm">Notificaciones push (UI)</span>
+                    <span className="text-sm">Notificaciones en la app</span>
                   </label>
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
@@ -463,6 +330,7 @@ export default function Notificaciones() {
                 className="w-full rounded-lg border border-black py-3 text-sm font-semibold text-black transition-colors hover:bg-[#e8e8e8]"
                 onClick={() => {
                   setPrefs(defaultPrefs);
+                  guardarPrefs.mutate(defaultPrefs);
                   toast.success("Preferencias restablecidas");
                 }}
               >

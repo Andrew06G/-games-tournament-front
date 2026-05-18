@@ -10,6 +10,8 @@ import { useAuth } from "../context/AuthContext";
 
 type FiltroTorneo = "todos" | "curso" | "proximos";
 
+const PAGE_SIZE = 10;
+
 function pasaFiltro(t: TorneoResumen, f: FiltroTorneo): boolean {
   const e = t.estado ?? "";
   if (f === "todos") return true;
@@ -28,6 +30,7 @@ export default function TorneoList() {
   const { user } = useAuth();
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<FiltroTorneo>("todos");
+  const [page, setPage] = useState(0);
   const [filtroMenu, setFiltroMenu] = useState(false);
   const filtroRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +78,16 @@ export default function TorneoList() {
     });
   }, [data, q, filtro]);
 
+  useEffect(() => {
+    setPage(0);
+  }, [q, filtro]);
+
+  const totalPages = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE));
+  const paginados = useMemo(() => {
+    const start = page * PAGE_SIZE;
+    return filtrados.slice(start, start + PAGE_SIZE);
+  }, [filtrados, page]);
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f9f9f9] font-sans text-[#1b1b1b]">
       <ArenaHeader
@@ -95,7 +108,7 @@ export default function TorneoList() {
         }
       />
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10 md:px-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 md:px-10">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
@@ -152,11 +165,39 @@ export default function TorneoList() {
             </p>
           ) : null}
 
-          <div className="flex flex-col gap-4">
-            {filtrados.map((t) => (
+          <div className="flex flex-col gap-6">
+            {paginados.map((t) => (
               <TorneoCard key={t.idTorneo} torneo={t} />
             ))}
           </div>
+
+          {filtrados.length > PAGE_SIZE ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#cfc4c5] bg-white px-5 py-4">
+              <p className="text-sm text-[#5c5f60]">
+                Página {page + 1} de {totalPages} ({filtrados.length} torneos)
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={page <= 0}
+                  className="rounded-lg border border-[#cfc4c5] px-4 py-2 text-sm font-semibold disabled:opacity-40"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  disabled={page >= totalPages - 1}
+                  className="rounded-lg border border-[#cfc4c5] px-4 py-2 text-sm font-semibold disabled:opacity-40"
+                  onClick={() =>
+                    setPage((p) => Math.min(totalPages - 1, p + 1))
+                  }
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {!isPending && filtrados.length === 0 ? (
             <p className="rounded-xl border border-dashed border-[#cfc4c5] bg-white p-8 text-center text-[#5c5f60]">

@@ -38,12 +38,6 @@ export default function AppLayout() {
             {user ? (
               <>
                 <span className="text-[var(--text)]">{user.nombre}</span>
-                <Link
-                  to="/dashboard"
-                  className="text-[var(--accent)] hover:underline"
-                >
-                  Panel
-                </Link>
                 {esOrganizador ? (
                   <Link
                     to="/torneos/crear"

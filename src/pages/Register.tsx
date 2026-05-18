@@ -1,9 +1,17 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { isAxiosError } from "axios";
 import ArenaHeader from "../components/layout/ArenaHeader";
+import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+
+type RolRegistro = {
+  idRol: number;
+  nombreRol: string;
+  descripcion: string | null;
+};
 
 export default function Register() {
   const { register } = useAuth();
@@ -12,10 +20,28 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [confirmar, setConfirmar] = useState("");
+  const [idRol, setIdRol] = useState<number | "">("");
   const [show1, setShow1] = useState(false);
   const [show2, setShow2] = useState(false);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  const { data: rolesData, isPending: rolesPending, isError: rolesError } =
+    useQuery({
+      queryKey: ["catalogos", "roles-registro"],
+      queryFn: async () => {
+        const { data } = await api.get<{ roles: RolRegistro[] }>(
+          "/catalogos/roles-registro",
+        );
+        return data.roles;
+      },
+    });
+
+  useEffect(() => {
+    if (!rolesData?.length || idRol !== "") return;
+    const jugador = rolesData.find((r) => r.nombreRol === "jugador");
+    setIdRol(jugador?.idRol ?? rolesData[0].idRol);
+  }, [rolesData, idRol]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,15 +57,20 @@ export default function Register() {
       toast.error("Debe aceptar los términos para continuar");
       return;
     }
+    if (idRol === "") {
+      toast.error("Seleccione un rol");
+      return;
+    }
     setBusy(true);
     try {
       await register({
         nombre: nombre.trim(),
         email: email.trim(),
         contrasena,
+        idRol,
       });
       toast.success("Cuenta creada");
-      navigate("/dashboard", { replace: true });
+      navigate("/torneos/crear", { replace: true });
     } catch (err) {
       const msg = isAxiosError(err)
         ? (err.response?.data as { error?: string })?.error ?? err.message
@@ -60,9 +91,8 @@ export default function Register() {
         <div className="mb-10 text-center">
           <h1 className="mb-1 text-3xl font-bold text-black">ArenaManager</h1>
           <p className="text-sm text-[#5c5f60]">
-            Crea tu cuenta y participa en torneos. Los nuevos usuarios reciben
-            el rol <strong className="text-[#1b1b1b]">jugador</strong> de forma
-            global.
+            Crea tu cuenta. Elija su perfil: puede organizar torneos, participar
+            como jugador o registrarse como líder de equipo.
           </p>
         </div>
 
@@ -103,6 +133,42 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                className="text-sm font-semibold text-[#1b1b1b]"
+                htmlFor="reg-rol"
+              >
+                Rol en la plataforma <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="reg-rol"
+                required
+                disabled={rolesPending || !!rolesError || !rolesData?.length}
+                className="w-full rounded-lg border border-[#cfc4c5] bg-white px-4 py-2.5 text-base outline-none transition-colors focus:border-black disabled:cursor-not-allowed disabled:opacity-60"
+                value={idRol === "" ? "" : String(idRol)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setIdRol(v === "" ? "" : Number(v));
+                }}
+              >
+                {rolesPending ? (
+                  <option value="">Cargando roles…</option>
+                ) : rolesError || !rolesData?.length ? (
+                  <option value="">No se pudieron cargar los roles</option>
+                ) : (
+                  rolesData.map((r) => (
+                    <option key={r.idRol} value={r.idRol}>
+                      {r.descripcion ?? r.nombreRol}
+                    </option>
+                  ))
+                )}
+              </select>
+              <p className="text-xs text-[#5c5f60]">
+                El rol queda vinculado a su cuenta de forma global (no por
+                torneo).
+              </p>
             </div>
 
             <div className="space-y-1">
@@ -192,7 +258,13 @@ export default function Register() {
 
             <button
               type="submit"
-              disabled={busy}
+              disabled={
+                busy ||
+                rolesPending ||
+                rolesError ||
+                !rolesData?.length ||
+                idRol === ""
+              }
               className="w-full rounded-lg bg-black py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
             >
               {busy ? "Creando…" : "Crear Cuenta"}

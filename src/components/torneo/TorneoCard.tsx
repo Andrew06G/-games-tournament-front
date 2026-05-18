@@ -7,7 +7,6 @@ import {
 } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 
 export type TorneoResumen = {
   idTorneo: number;
@@ -115,12 +114,6 @@ const badgeStyles: Record<
 };
 
 export default function TorneoCard({ torneo }: { torneo: TorneoResumen }) {
-  const { user } = useAuth();
-  const puedeValidar =
-    user &&
-    (user.globalRoles.includes("organizador") ||
-      torneo.organizador?.idUsuario === user.idUsuario);
-
   const max = torneo.numMaxParticipantes ?? 0;
   const ins =
     torneo.numInscritos ??
@@ -131,91 +124,88 @@ export default function TorneoCard({ torneo }: { torneo: TorneoResumen }) {
   const b = badgeInfo(torneo);
   const bs = badgeStyles[b.variant];
   const inscripcionesAbiertas = torneo.estado === "inscripciones_abiertas";
+  const cupoLleno = max > 0 && ins >= max;
+  const mostrarInscribirse = inscripcionesAbiertas && !cupoLleno;
 
   return (
-    <article className="flex flex-col items-center gap-6 rounded-xl border border-[#cfc4c5] bg-white p-6 transition-shadow hover:shadow-sm md:flex-row md:items-center">
-      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#cfc4c5] bg-[#eeeeee] text-lg font-bold text-[#1b1b1b]">
-        {inicialesTipo(torneo.tipoVideojuego?.nombre)}
-      </div>
-
-      <div className="grid w-full flex-grow grid-cols-1 gap-4 md:grid-cols-4">
-        <div className="md:col-span-2">
-          <div className="mb-1 flex flex-wrap items-center gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${bs.wrap}`}
-            >
-              <span
-                className={`h-2 w-2 rounded-full ${bs.dot} ${b.pulse ? "animate-pulse" : ""}`}
-              />
-              {b.label}
-            </span>
-            {b.sub ? (
-              <span className="text-xs text-[#5c5f60]">• {b.sub}</span>
-            ) : null}
+    <article className="rounded-2xl border border-[#cfc4c5] bg-white p-8 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 flex-1 gap-6">
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#cfc4c5] bg-[#eeeeee] text-xl font-bold text-[#1b1b1b]">
+            {inicialesTipo(torneo.tipoVideojuego?.nombre)}
           </div>
-          <h3 className="text-lg font-semibold text-[#1b1b1b]">{torneo.nombre}</h3>
-          <p className="mt-0.5 text-sm text-[#5c5f60]">{subtituloLinea(torneo)}</p>
-        </div>
 
-        <div className="flex flex-col justify-center">
-          <span className="text-xs font-medium uppercase tracking-wider text-[#5c5f60]">
-            Formato
-          </span>
-          <span className="mt-1 text-sm font-semibold text-[#1b1b1b]">
-            {torneo.formato?.nombre ?? "—"}
-          </span>
-        </div>
-
-        <div className="flex flex-col justify-center">
-          <span className="text-xs font-medium uppercase tracking-wider text-[#5c5f60]">
-            Participantes
-          </span>
-          <div className="mt-2 flex max-w-[140px] items-center gap-2">
-            <div className="h-1.5 flex-1 rounded-full bg-[#e8e8e8]">
-              <div
-                className="h-1.5 rounded-full bg-black transition-all"
-                style={{ width: `${pct}%` }}
-              />
+          <div className="min-w-0 flex-1 space-y-4">
+            <div>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${bs.wrap}`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${bs.dot} ${b.pulse ? "animate-pulse" : ""}`}
+                  />
+                  {b.label}
+                </span>
+                {b.sub ? (
+                  <span className="text-sm text-[#5c5f60]">• {b.sub}</span>
+                ) : null}
+              </div>
+              <h3 className="text-2xl font-bold leading-tight text-[#1b1b1b]">
+                {torneo.nombre}
+              </h3>
+              <p className="mt-1 text-base text-[#5c5f60]">
+                {subtituloLinea(torneo)}
+              </p>
             </div>
-            <span className="shrink-0 text-sm font-semibold text-[#1b1b1b]">
-              {ins}/{max || "—"}
-            </span>
-          </div>
-          <span className="mt-1 text-xs text-[#5c5f60]">equipos inscritos / cupo</span>
-        </div>
-      </div>
 
-      <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
-        <Link
-          to={`/torneos/${torneo.idTorneo}/bracket`}
-          className="inline-flex justify-center rounded-lg bg-black px-6 py-2.5 text-center text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
-          Ver Brackets
-        </Link>
-        {inscripcionesAbiertas ? (
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#5c5f60]">
+                  Formato
+                </span>
+                <p className="mt-2 text-base font-semibold text-[#1b1b1b]">
+                  {torneo.formato?.nombre ?? "—"}
+                </p>
+              </div>
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#5c5f60]">
+                  Participantes
+                </span>
+                <div className="mt-2 flex max-w-xs items-center gap-3">
+                  <div className="h-2 flex-1 rounded-full bg-[#e8e8e8]">
+                    <div
+                      className="h-2 rounded-full bg-black transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="shrink-0 text-base font-bold text-[#1b1b1b]">
+                    {ins}/{max || "—"}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-[#5c5f60]">
+                  equipos inscritos / cupo del bracket
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:flex-wrap lg:max-w-md lg:flex-col xl:flex-row">
           <Link
-            to={`/torneos/${torneo.idTorneo}/equipos`}
-            className="inline-flex justify-center rounded-lg border border-black px-6 py-2.5 text-center text-sm font-semibold text-black transition-colors hover:bg-[#f3f3f3]"
+            to={`/torneos/${torneo.idTorneo}/bracket`}
+            className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-black px-6 py-3 text-center text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
-            Inscribirse
+            Consultar
           </Link>
-        ) : null}
-        {user ? (
-          <Link
-            to={`/torneos/${torneo.idTorneo}/registrar-resultado`}
-            className="inline-flex justify-center rounded-lg border border-[#cfc4c5] px-4 py-2 text-center text-xs font-semibold text-[#5c5f60] hover:bg-[#f9f9f9]"
-          >
-            Resultado
-          </Link>
-        ) : null}
-        {puedeValidar ? (
-          <Link
-            to={`/torneos/${torneo.idTorneo}/validar-resultados`}
-            className="inline-flex justify-center rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-center text-xs font-semibold text-amber-900 hover:bg-amber-100"
-          >
-            Validar
-          </Link>
-        ) : null}
+          {mostrarInscribirse ? (
+            <Link
+              to={`/torneos/${torneo.idTorneo}/equipos`}
+              className="inline-flex min-h-[44px] items-center justify-center rounded-lg border-2 border-black px-6 py-3 text-center text-sm font-semibold text-black transition-colors hover:bg-[#f3f3f3]"
+            >
+              Inscribirse
+            </Link>
+          ) : null}
+        </div>
       </div>
     </article>
   );

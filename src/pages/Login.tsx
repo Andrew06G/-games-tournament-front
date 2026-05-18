@@ -10,7 +10,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const from =
-    (location.state as { from?: string } | null)?.from ?? "/dashboard";
+    (location.state as { from?: string } | null)?.from ?? "/torneos/crear";
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [busy, setBusy] = useState(false);

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import toast from "react-hot-toast";
 import { api } from "../lib/api";
 import {
   clearStoredTokens,
@@ -32,6 +33,7 @@ type AuthContextValue = {
     nombre: string;
     email: string;
     contrasena: string;
+    idRol: number;
   }) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -65,6 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refreshUser();
   }, [refreshUser]);
 
+  useEffect(() => {
+    function onSessionExpired() {
+      setUser(null);
+      toast.error("Su sesión expiró. Inicie sesión de nuevo.");
+    }
+    window.addEventListener("arena:session-expired", onSessionExpired);
+    return () =>
+      window.removeEventListener("arena:session-expired", onSessionExpired);
+  }, []);
+
   const login = useCallback(async (email: string, contrasena: string) => {
     const { data } = await api.post<{
       user: AuthUser;
@@ -76,7 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (payload: { nombre: string; email: string; contrasena: string }) => {
+    async (payload: {
+      nombre: string;
+      email: string;
+      contrasena: string;
+      idRol: number;
+    }) => {
       const { data } = await api.post<{
         user: AuthUser;
         accessToken: string;

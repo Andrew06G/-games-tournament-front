@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CrearTorneo from "./pages/CrearTorneo";
 import Dashboard from "./pages/Dashboard";
-import EquiposHub from "./pages/EquiposHub";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Notificaciones from "./pages/Notificaciones";
@@ -18,7 +17,14 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="notificaciones" element={<Notificaciones />} />
+      <Route
+        path="notificaciones"
+        element={
+          <ProtectedRoute>
+            <Notificaciones />
+          </ProtectedRoute>
+        }
+      />
       <Route path="torneos/:id/bracket" element={<TorneoBracket />} />
       <Route path="torneos/:id/equipos" element={<TorneoEquipos />} />
       <Route
@@ -38,7 +44,6 @@ export default function App() {
         }
       />
       <Route path="torneos" element={<TorneoList />} />
-      <Route path="equipos" element={<EquiposHub />} />
       <Route path="resultados" element={<ResultadosHub />} />
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />

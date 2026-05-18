@@ -83,6 +83,22 @@ body {
   margin: 0;
 }
 
+/* Campos en modales/páginas Arena: fondo claro aunque el SO use modo oscuro */
+.arena-field {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #1b1b1b;
+}
+
+.arena-field::placeholder {
+  color: #7e7576;
+}
+
+select.arena-field option {
+  background-color: #ffffff;
+  color: #1b1b1b;
+}
+
 h1,
 h2 {
   font-family: var(--heading);

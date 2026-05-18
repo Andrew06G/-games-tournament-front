@@ -63,6 +63,7 @@ api.interceptors.response.use(
       return api(original);
     } catch {
       clearStoredTokens();
+      window.dispatchEvent(new CustomEvent("arena:session-expired"));
       return Promise.reject(error);
     }
   },
