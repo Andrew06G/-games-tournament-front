@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useNotificacionesNoLeidas } from "../../hooks/useNotificacionesNoLeidas";
 
 export type ArenaNavActive = "torneos" | "resultados" | "notificaciones";
 
@@ -26,6 +27,8 @@ export default function ArenaHeader({
 }: ArenaHeaderProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const noLeidasQ = useNotificacionesNoLeidas(Boolean(user));
+  const noLeidas = noLeidasQ.data ?? 0;
 
   const stickyCls = sticky ? "sticky top-0 z-50" : "";
   const bgCls =
@@ -65,16 +68,39 @@ export default function ArenaHeader({
           >
             Crear Torneo
           </Link>
-          <Link
-            to="/notificaciones"
-            className={`hidden shrink-0 whitespace-nowrap text-sm md:inline ${
-              active === "notificaciones"
-                ? "border-b-2 border-black pb-0.5 font-bold text-black"
-                : "text-[#5c5f60] hover:text-black"
-            }`}
-          >
-            Notificaciones
-          </Link>
+          {user ? (
+            <Link
+              to="/notificaciones"
+              title="Notificaciones"
+              aria-label={
+                noLeidas > 0
+                  ? `Notificaciones (${noLeidas} sin leer)`
+                  : "Notificaciones"
+              }
+              className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                active === "notificaciones"
+                  ? "bg-black text-white"
+                  : "text-[#5c5f60] hover:bg-[#eeeeee] hover:text-black"
+              }`}
+            >
+              <span
+                className="material-symbols-outlined text-[22px]"
+                style={
+                  active === "notificaciones"
+                    ? { fontVariationSettings: "'FILL' 1" }
+                    : undefined
+                }
+              >
+                notifications
+              </span>
+              {noLeidas > 0 ? (
+                <span
+                  className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-red-600 ring-2 ring-[#f9f9f9]"
+                  aria-hidden
+                />
+              ) : null}
+            </Link>
+          ) : null}
           {user ? (
             <>
               <span

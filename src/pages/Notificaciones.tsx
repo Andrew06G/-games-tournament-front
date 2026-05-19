@@ -73,14 +73,15 @@ function iconForTipo(tipo: string) {
   switch (tipo) {
     case "enfrentamiento_asignado":
       return "sports_esports";
-    case "resultado_publicado":
-      return "scoreboard";
-    case "torneo_inicio":
-    case "torneo_fin":
+    case "campeon_torneo":
       return "emoji_events";
     default:
       return "notifications";
   }
+}
+
+function esNotifCampeon(tipo: string) {
+  return tipo === "campeon_torneo";
 }
 
 export default function Notificaciones() {
@@ -121,12 +122,23 @@ export default function Notificaciones() {
     enabled: Boolean(user),
   });
 
+  useEffect(() => {
+    if (inboxQ.isSuccess) {
+      void queryClient.invalidateQueries({
+        queryKey: ["notificaciones-no-leidas"],
+      });
+    }
+  }, [inboxQ.isSuccess, queryClient]);
+
   const marcarLeidaM = useMutation({
     mutationFn: async (id: number) => {
       await api.put(`/notificaciones/${id}/leer`);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["notificaciones"] });
+      void queryClient.invalidateQueries({
+        queryKey: ["notificaciones-no-leidas"],
+      });
     },
     onError: () => {
       toast.error("No se pudo marcar como leída");
@@ -153,7 +165,8 @@ export default function Notificaciones() {
             Centro de notificaciones
           </h1>
           <p className="text-base text-[#5c5f60]">
-            Alertas de enfrentamientos, resultados y estado del torneo.
+            Avisos cuando tu equipo tiene un nuevo enfrentamiento o cuando ganas
+            un torneo.
           </p>
           <p className="mt-2 text-sm text-[#5c5f60]">
             Para crear enfrentamientos, abra un torneo en{" "}
@@ -184,21 +197,42 @@ export default function Notificaciones() {
                 No tienes notificaciones por ahora.
               </p>
             ) : (
-              inbox.map((n) => (
+              inbox.map((n) => {
+                const campeon = esNotifCampeon(n.tipoNotificacion);
+                return (
                 <article
                   key={n.idNotificacion}
-                  className={`flex gap-4 rounded-xl border border-[#cfc4c5] p-6 shadow-sm ${
-                    n.leida ? "border-opacity-60 bg-[#f9f9f9] opacity-80" : "bg-white"
+                  className={`flex gap-4 rounded-xl border p-6 shadow-sm ${
+                    campeon
+                      ? n.leida
+                        ? "border-amber-200 bg-gradient-to-br from-amber-50/80 to-yellow-50/50 opacity-90"
+                        : "border-amber-400 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100/80 ring-1 ring-amber-300/60"
+                      : n.leida
+                        ? "border-[#cfc4c5] border-opacity-60 bg-[#f9f9f9] opacity-80"
+                        : "border-[#cfc4c5] bg-white"
                   }`}
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-black text-white">
-                    <span className="material-symbols-outlined text-2xl">
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${
+                      campeon
+                        ? "bg-gradient-to-br from-amber-500 to-yellow-600 text-white shadow-md"
+                        : "bg-black text-white"
+                    }`}
+                  >
+                    <span
+                      className="material-symbols-outlined text-2xl"
+                      style={
+                        campeon
+                          ? { fontVariationSettings: "'FILL' 1" }
+                          : undefined
+                      }
+                    >
                       {iconForTipo(n.tipoNotificacion)}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-semibold text-black">{n.titulo}</span>
+                      <span className={`font-semibold ${campeon ? "text-amber-900" : "text-black"}`}>{n.titulo}</span>
                       <span className="text-xs text-[#5c5f60]">
                         {new Date(n.fechaEnvio).toLocaleString("es")}
                       </span>
@@ -237,10 +271,13 @@ export default function Notificaciones() {
                     ) : null}
                   </div>
                   {!n.leida ? (
-                    <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-black" />
+                    <div
+                      className={`mt-2 h-2 w-2 shrink-0 rounded-full ${campeon ? "bg-amber-500" : "bg-black"}`}
+                    />
                   ) : null}
                 </article>
-              ))
+                );
+              })
             )}
 
             <div className="flex items-center gap-3 rounded-lg border border-[#cfc4c5] bg-[#dee0e2] p-4">
@@ -248,9 +285,8 @@ export default function Notificaciones() {
                 info
               </span>
               <p className="text-sm text-[#606365]">
-                Las notificaciones se guardan en el servidor y se envían al
-                asignar enfrentamientos, publicar resultados validados, o al
-                iniciar o finalizar un torneo.
+                Recibirás avisos cuando se asigne un enfrentamiento a tu equipo y,
+                si ganas la final, un mensaje especial de campeón.
               </p>
             </div>
           </div>
@@ -267,10 +303,8 @@ export default function Notificaciones() {
 
               {(
                 [
-                  ["enfrentamientos", "Enfrentamientos", "Nuevos emparejamientos"],
-                  ["resultados", "Resultados", "Validación y marcador"],
-                  ["fases", "Nuevas fases", "Inicio y fin de torneo"],
-                  ["recordatorio", "Recordatorios", "Avisos programados"],
+                  ["enfrentamientos", "Enfrentamientos", "Cuando tu equipo tenga partida"],
+                  ["fases", "Campeón del torneo", "Felicitación al ganar la final"],
                 ] as const
               ).map(([key, label, sub]) => (
                 <div

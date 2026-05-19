@@ -18,6 +18,7 @@ import {
 export type AuthUser = {
   idUsuario: number;
   nombre: string;
+  nickname: string | null;
   email: string;
   telefono: string | null;
   estado: string | null;
@@ -34,6 +35,7 @@ type AuthContextValue = {
     email: string;
     contrasena: string;
     idRol: number;
+    nickname?: string;
   }) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -93,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: string;
       contrasena: string;
       idRol: number;
+      nickname?: string;
     }) => {
       const { data } = await api.post<{
         user: AuthUser;

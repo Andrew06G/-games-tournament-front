@@ -145,6 +145,9 @@ export default function TorneoEquipos() {
     (esOrgTorneo || inscripcionesAbiertas) &&
     !cupoLleno;
 
+  const nicknamePerfil = user?.nickname?.trim() ?? "";
+  const muestraCampoNickname = esOrgTorneo || nicknamePerfil.length === 0;
+
   const eliminarEquipo = useMutation({
     mutationFn: async (idEquipo: number) => {
       await api.delete(`/equipos/${idEquipo}`);
@@ -225,7 +228,7 @@ export default function TorneoEquipos() {
       toast.error("Debe iniciar sesión para inscribir un equipo");
       return;
     }
-    if (esOrgTorneo && !nickname.trim()) {
+    if (muestraCampoNickname && esOrgTorneo && !nickname.trim()) {
       toast.error("Indique el nickname del capitán del equipo");
       return;
     }
@@ -669,24 +672,47 @@ export default function TorneoEquipos() {
                     onChange={(e) => setNombreEquipo(e.target.value)}
                   />
                 </label>
-                <label className="block space-y-2">
-                  <span className="text-sm font-semibold">
-                    Nickname del capitán (@){esOrgTorneo ? " *" : ""}
-                  </span>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7e7576]">
-                      @
+                {!muestraCampoNickname ? (
+                  <p className="rounded-lg border border-[#e8e8e8] bg-[#f9f9f9] px-3 py-2 text-sm text-[#5c5f60]">
+                    Capitán:{" "}
+                    <span className="font-semibold text-black">
+                      @{nicknamePerfil}
+                    </span>{" "}
+                    (desde tu perfil)
+                  </p>
+                ) : (
+                  <label className="block space-y-2">
+                    <span className="text-sm font-semibold">
+                      Nickname del capitán (@){esOrgTorneo ? " *" : ""}
                     </span>
-                    <input
-                      required={esOrgTorneo}
-                      disabled={cupoLleno || inscribir.isPending}
-                      className="arena-field w-full rounded-lg border border-[#cfc4c5] py-2 pl-8 pr-3 outline-none ring-black focus:ring-1 disabled:cursor-not-allowed disabled:bg-[#f3f3f3] disabled:opacity-60"
-                      placeholder="nickname"
-                      value={nickname}
-                      onChange={(e) => setNickname(e.target.value)}
-                    />
-                  </div>
-                </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7e7576]">
+                        @
+                      </span>
+                      <input
+                        required={esOrgTorneo}
+                        disabled={cupoLleno || inscribir.isPending}
+                        className="arena-field w-full rounded-lg border border-[#cfc4c5] py-2 pl-8 pr-3 outline-none ring-black focus:ring-1 disabled:cursor-not-allowed disabled:bg-[#f3f3f3] disabled:opacity-60"
+                        placeholder={
+                          esOrgTorneo
+                            ? "nickname del representante"
+                            : "opcional"
+                        }
+                        value={nickname}
+                        onChange={(e) =>
+                          setNickname(
+                            e.target.value.replace(/[^a-zA-Z0-9_]/g, ""),
+                          )
+                        }
+                      />
+                    </div>
+                    {!esOrgTorneo ? (
+                      <p className="text-xs text-[#5c5f60]">
+                        Si lo dejas vacío, se usará el nombre del equipo.
+                      </p>
+                    ) : null}
+                  </label>
+                )}
                 <label className="block space-y-2">
                   <span className="text-sm font-semibold">Email de Contacto</span>
                   <input

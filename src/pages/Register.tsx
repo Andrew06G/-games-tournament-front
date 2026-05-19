@@ -17,6 +17,7 @@ export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
+  const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [confirmar, setConfirmar] = useState("");
@@ -68,6 +69,7 @@ export default function Register() {
         email: email.trim(),
         contrasena,
         idRol,
+        ...(nickname.trim() ? { nickname: nickname.trim() } : {}),
       });
       toast.success("Cuenta creada");
       navigate("/torneos/crear", { replace: true });
@@ -114,6 +116,34 @@ export default function Register() {
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-1">
+              <label
+                className="text-sm font-semibold text-[#1b1b1b]"
+                htmlFor="reg-nick"
+              >
+                Nickname (opcional)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7e7576]">
+                  @
+                </span>
+                <input
+                  id="reg-nick"
+                  autoComplete="username"
+                  placeholder="tu_nickname"
+                  title="Solo letras, números y guión bajo"
+                  className="w-full rounded-lg border border-[#cfc4c5] bg-white py-2.5 pl-8 pr-4 text-base outline-none transition-colors placeholder:text-[#7e7576] focus:border-black"
+                  value={nickname}
+                  onChange={(e) => {
+                    setNickname(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""));
+                  }}
+                />
+              </div>
+              <p className="text-xs text-[#5c5f60]">
+                Se usará como capitán al inscribir equipos en torneos.
+              </p>
             </div>
 
             <div className="space-y-1">
