@@ -40,7 +40,7 @@ El backend debe tener `FRONTEND_URL=http://localhost:5173` para **CORS** y Socke
    - `VITE_SOCKET_URL` = `https://games-tournament-back.onrender.com` (mismo host que el API, sin `/api`).
 2. Tras crear o cambiar variables, hace falta **un deploy nuevo** (Vite las incrusta en el JS al compilar).
 3. **SPA / React Router:** el archivo `public/_redirects` se copia a `dist/` y Netlify lo usa para devolver `index.html` en rutas como `/torneos` (evita 404 al refrescar).
-4. En **Render**, actualiza `FRONTEND_URL` a la URL pública de Netlify (ej. `https://tu-sitio.netlify.app`), sin barra final, y redeploy del backend.
+4. En **Render**, actualiza `FRONTEND_URL` a la URL pública de Netlify (ej. `https://tu-sitio.netlify.app`), **sin barra final** — debe coincidir con el dominio que ves en el navegador. Si sigues la URL de Vercel, CORS fallará. Tras cambiarla, redeploy del backend.
 
 `vercel.json` solo aplica en Vercel; en Netlify no se usa.
 
