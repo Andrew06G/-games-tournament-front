@@ -185,8 +185,16 @@ export default function Register() {
               >
                 {rolesPending ? (
                   <option value="">Cargando roles…</option>
-                ) : rolesError || !rolesData?.length ? (
-                  <option value="">No se pudieron cargar los roles</option>
+                ) : rolesError ? (
+                  <option value="">
+                    Error al cargar roles (red/CORS o API). Revise VITE_API_URL y
+                    FRONTEND_URL en Render.
+                  </option>
+                ) : !rolesData?.length ? (
+                  <option value="">
+                    No hay roles en la base de datos. Ejecute en el back: npm run
+                    prisma:seed (o npx prisma db seed).
+                  </option>
                 ) : (
                   rolesData.map((r) => (
                     <option key={r.idRol} value={r.idRol}>
