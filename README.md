@@ -33,6 +33,17 @@ VITE_SOCKET_URL=http://localhost:3000
 
 El backend debe tener `FRONTEND_URL=http://localhost:5173` para **CORS** y Socket.io.
 
+### Netlify (producción)
+
+1. **Site configuration → Environment variables → Add a variable** (o *Build & deploy → Environment*), para el contexto **Production** (y Preview si quieres):
+   - `VITE_API_URL` = `https://games-tournament-back.onrender.com/api` (o la URL de tu API; debe terminar en `/api`).
+   - `VITE_SOCKET_URL` = `https://games-tournament-back.onrender.com` (mismo host que el API, sin `/api`).
+2. Tras crear o cambiar variables, hace falta **un deploy nuevo** (Vite las incrusta en el JS al compilar).
+3. **SPA / React Router:** el archivo `public/_redirects` se copia a `dist/` y Netlify lo usa para devolver `index.html` en rutas como `/torneos` (evita 404 al refrescar).
+4. En **Render**, actualiza `FRONTEND_URL` a la URL pública de Netlify (ej. `https://tu-sitio.netlify.app`), sin barra final, y redeploy del backend.
+
+`vercel.json` solo aplica en Vercel; en Netlify no se usa.
+
 ## Rutas de la SPA (implementación actual)
 
 | Ruta | Descripción |
