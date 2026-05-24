@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+coverage
+.git
+.gitignore
+*.md
+.env
+.env.*
+!.env.example
+npm-debug.log*
+.DS_Store
+.cursor
+agent-transcripts

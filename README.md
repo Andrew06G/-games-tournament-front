@@ -75,10 +75,85 @@ Vite mostrará la URL local (por defecto **http://localhost:5173/**).
 Otros comandos:
 
 ```bash
-npm run build    # Compilación para producción
-npm run preview  # Vista previa del build
-npm run lint     # ESLint
+npm run build         # Compilación para producción
+npm run preview       # Vista previa del build
+npm run lint          # ESLint
+npm run test          # Pruebas unitarias (una ejecución)
+npm run test:watch    # Pruebas en modo watch
+npm run test:coverage # Cobertura con Vitest + v8
 ```
+
+## Pruebas unitarias
+
+| Herramienta | Versión (package.json) |
+|-------------|-------------------------|
+| [Vitest](https://vitest.dev/) | `^3.2.4` |
+| [jsdom](https://github.com/jsdom/jsdom) | `^26.1.0` |
+| [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro/) | `^16.3.0` |
+| [@testing-library/jest-dom](https://github.com/testing-library/jest-dom) | `^6.9.1` |
+| [@testing-library/user-event](https://testing-library.com/docs/user-event/intro/) | `^14.6.1` |
+
+La configuración vive en `vite.config.ts` (bloque `test`) y el setup global en `src/test/setup.ts`. Las variables `VITE_API_URL` y `VITE_SOCKET_URL` se definen en el entorno de prueba para que `src/env.ts` no falle al importarse.
+
+### Qué se prueba
+
+| Área | Archivo de prueba | Contenido |
+|------|-------------------|-----------|
+| Variables de entorno | `src/env.test.ts` | Lectura, recorte de barras finales y errores si faltan variables |
+| Tokens en `localStorage` | `src/lib/authStorage.test.ts` | Guardar, leer y limpiar access/refresh |
+| Layout del bracket | `src/lib/bracketLayout.test.ts` | `computeBracketTops`, `bracketCanvasHeight`, constante `BRACKET_ROW_UNIT` |
+| Reglas del bracket | `src/lib/bracketHelpers.test.ts` | Equipos en cupos, disponibilidad, registro/validación de resultados, estados del torneo |
+| Permisos por rol | `src/lib/torneoPermissions.test.ts` | Organizador, líder de equipo y registro ampliado de marcadores |
+| Ruta protegida | `src/components/ProtectedRoute.test.tsx` | Carga, redirección a login y acceso autenticado |
+| Tarjeta de torneo | `src/components/torneo/TorneoCard.test.tsx` | Badges, enlaces, cupo, barra de progreso e iniciales del juego |
+
+Utilidades de prueba compartidas: `src/test/testUtils.tsx` (`renderWithProviders` con `MemoryRouter` y `QueryClient`).
+
+### Ejecutar las pruebas
+
+Tras `npm install`:
+
+```bash
+npm run test
+```
+
+Modo interactivo (re-ejecuta al guardar):
+
+```bash
+npm run test:watch
+```
+
+Informe de cobertura en consola y carpeta `coverage/`:
+
+```bash
+npm run test:coverage
+```
+
+Ejecutar un solo archivo:
+
+```bash
+npx vitest run src/lib/bracketHelpers.test.ts
+```
+
+### Pruebas en Docker (`DockerFilePruebas`)
+
+Imagen de CI que instala dependencias (`npm ci` si el lock está al día; si no, `npm install` según `package.json`), ejecuta `npm run build` y luego `npm run test:coverage`. Si algo falla, el `docker build` termina con error.
+
+Antes del primer build, conviene ejecutar `npm install` en el host y commitear `package-lock.json` para builds reproducibles con `npm ci` puro.
+
+```bash
+docker build -f DockerFilePruebas -t torneo-front-pruebas .
+```
+
+Copiar el informe HTML de cobertura al host tras un build exitoso:
+
+```bash
+docker create --name torneo-front-coverage torneo-front-pruebas
+docker cp torneo-front-coverage:/app/coverage ./coverage
+docker rm torneo-front-coverage
+```
+
+Requisitos: Docker instalado y acceso a red en el build (descarga de la imagen base `node:22-bookworm-slim` y de paquetes npm).
 
 ## Relación con el backend y Prisma
 
@@ -100,6 +175,7 @@ npm run lint     # ESLint
 - `context/AuthContext.tsx` — sesión global.
 - `components/layout/AppLayout.tsx`, `components/ProtectedRoute.tsx`, `components/torneo/TorneoCard.tsx`
 - `pages/` — pantallas principales (Home, Login, Register, Dashboard, CrearTorneo, TorneoBracket).
+- `**/*.test.ts(x)`** — pruebas unitarias junto al código que cubren (ver sección anterior).
 
 Pendiente según `PROMPT_CURSOR.md`: más páginas (inscripción, gestión, notificaciones), `BracketVisualizer`, hooks de socket.
 
