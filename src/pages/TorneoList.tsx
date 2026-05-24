@@ -93,7 +93,7 @@ export default function TorneoList() {
       <ArenaHeader
         active="torneos"
         trailingSlot={
-          <div className="relative hidden sm:block">
+          <div className="relative hidden md:block">
             <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#5c5f60]">
               search
             </span>
@@ -108,8 +108,21 @@ export default function TorneoList() {
         }
       />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 md:px-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 md:px-10">
         <div className="flex flex-col gap-8">
+          <div className="relative md:hidden">
+            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#5c5f60]">
+              search
+            </span>
+            <input
+              type="search"
+              placeholder="Buscar torneos…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full rounded-lg border border-[#cfc4c5] bg-[#f3f3f3] py-2.5 pl-10 pr-3 text-sm outline-none ring-black focus:ring-1"
+            />
+          </div>
+
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <h1 className="text-3xl font-bold text-[#1b1b1b]">Torneos</h1>
@@ -229,7 +242,7 @@ export default function TorneoList() {
       </main>
 
       <footer className="mt-auto border-t border-[#cfc4c5] bg-[#eeeeee]">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-10 sm:px-6 md:flex-row md:px-10">
           <div>
             <p className="font-semibold text-black">ArenaManager</p>
             <p className="mt-1 text-sm text-[#5c5f60]">

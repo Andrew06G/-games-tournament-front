@@ -193,7 +193,7 @@ export default function TorneoRegistrarResultado() {
     <div className="min-h-screen bg-[#f9f9f9] font-sans text-[#1b1b1b]">
       <ArenaHeader active="torneos" bg="white" />
 
-      <main className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-12 md:px-10">
+      <main className="mx-auto grid min-w-0 max-w-7xl gap-10 px-4 py-10 sm:px-6 sm:py-12 md:grid-cols-12 md:px-10">
         <p className="md:col-span-12">
           <Link
             to={volverA}

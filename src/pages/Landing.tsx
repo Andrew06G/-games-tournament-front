@@ -10,29 +10,29 @@ export default function Landing() {
 
       <main>
         <section className="overflow-hidden bg-white pb-16 pt-12 md:pb-24 md:pt-16">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 md:px-10 lg:grid-cols-2">
-            <div className="z-10 space-y-8">
+          <div className="mx-auto grid min-w-0 max-w-7xl items-center gap-10 px-4 sm:px-6 md:gap-12 md:px-10 lg:grid-cols-2">
+            <div className="z-10 min-w-0 space-y-8">
               <div className="space-y-4">
-                <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-black md:text-6xl lg:text-7xl">
+                <h1 className="text-3xl font-extrabold leading-[1.12] tracking-tight text-black sm:text-4xl md:text-6xl lg:text-7xl">
                   Organiza, Compite y Gana en un Solo Lugar
                 </h1>
-                <p className="max-w-lg text-lg text-[#5c5f60] md:text-xl">
+                <p className="max-w-lg text-base text-[#5c5f60] sm:text-lg md:text-xl">
                   La infraestructura definitiva para comunidades de eSports.
                   Brackets automáticos, gestión de resultados y rankings con un
                   diseño minimalista.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   to="/torneos"
-                  className="inline-flex items-center gap-2 rounded-lg bg-black px-8 py-3 text-sm font-semibold text-white transition-all hover:opacity-90"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-black px-6 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 sm:w-auto sm:px-8"
                 >
                   Explorar Torneos
                   <span className={icon}>arrow_forward</span>
                 </Link>
                 <Link
                   to="/torneos/crear"
-                  className="rounded-lg border border-[#cfc4c5] bg-white px-8 py-3 text-sm font-semibold text-black transition-colors hover:bg-[#f3f3f3]"
+                  className="w-full rounded-lg border border-[#cfc4c5] bg-white px-6 py-3 text-center text-sm font-semibold text-black transition-colors hover:bg-[#f3f3f3] sm:w-auto sm:px-8"
                 >
                   Crear mi primer torneo
                 </Link>
@@ -96,7 +96,7 @@ export default function Landing() {
         </section>
 
         <section className="bg-[#f9f9f9] py-16 md:py-20">
-          <div className="mx-auto max-w-7xl px-6 md:px-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10">
             <div className="mb-12 text-center">
               <h2 className="mb-3 text-3xl font-bold text-black md:text-4xl">
                 Herramientas para cada perfil
@@ -140,7 +140,7 @@ export default function Landing() {
         </section>
 
         <section className="bg-black py-16 text-white md:py-20">
-          <div className="mx-auto max-w-7xl space-y-8 px-6 text-center md:px-10">
+          <div className="mx-auto max-w-7xl space-y-8 px-4 text-center sm:px-6 md:px-10">
             <h2 className="text-3xl font-extrabold md:text-5xl">
               ¿Listo para elevar tu comunidad?
             </h2>
@@ -166,7 +166,7 @@ export default function Landing() {
       </main>
 
       <footer className="border-t border-[#cfc4c5] bg-[#eeeeee]">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 py-10 md:flex-row md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-10 sm:px-6 md:flex-row md:px-10">
           <div className="text-center md:text-left">
             <p className="font-semibold text-black">ArenaManager</p>
             <p className="mt-1 text-sm text-[#5c5f60]">

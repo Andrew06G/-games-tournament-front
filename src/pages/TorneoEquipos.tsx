@@ -317,7 +317,7 @@ export default function TorneoEquipos() {
         bg="white"
       />
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-12 lg:flex-row lg:px-10">
+      <main className="mx-auto flex min-w-0 max-w-7xl flex-col gap-10 px-4 py-10 sm:px-6 sm:py-12 lg:flex-row lg:px-10">
         <div className="min-w-0 flex-1 space-y-8">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div>
@@ -361,7 +361,7 @@ export default function TorneoEquipos() {
             </div>
           </div>
 
-          <div className="relative max-w-md">
+          <div className="relative w-full max-w-md min-w-0">
             <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#7e7576]">
               search
             </span>
@@ -380,7 +380,7 @@ export default function TorneoEquipos() {
             </p>
           ) : null}
 
-          <div className="overflow-hidden rounded-xl border border-[#cfc4c5] bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-xl border border-[#cfc4c5] bg-white shadow-sm">
             <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
                 <col className="w-[36%] min-w-[220px]" />
@@ -757,7 +757,7 @@ export default function TorneoEquipos() {
       </main>
 
       <footer className="mt-auto border-t border-[#cfc4c5] bg-[#eeeeee]">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-10 sm:px-6 md:flex-row md:px-10">
           <p className="text-sm font-semibold text-black">ArenaManager</p>
           <p className="text-sm text-[#5c5f60]">© {new Date().getFullYear()}</p>
         </div>

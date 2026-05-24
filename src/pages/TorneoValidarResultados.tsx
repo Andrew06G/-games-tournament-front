@@ -97,7 +97,7 @@ export default function TorneoValidarResultados() {
     <div className="min-h-screen bg-[#f9f9f9] font-sans text-[#1b1b1b]">
       <ArenaHeader active="torneos" bg="white" />
 
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-12">
         <p className="mb-6 text-sm">
           <Link
             to={`/torneos/${torneoId}/bracket`}

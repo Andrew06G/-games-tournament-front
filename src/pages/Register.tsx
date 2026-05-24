@@ -89,7 +89,7 @@ export default function Register() {
       <div className="pointer-events-none fixed -left-24 -top-24 h-96 w-96 rounded-full bg-[#f3f3f3] opacity-30 mix-blend-multiply blur-3xl" />
       <div className="pointer-events-none fixed -bottom-24 -right-24 h-96 w-96 rounded-full bg-[#f3f3f3] opacity-30 mix-blend-multiply blur-3xl" />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-md flex-col items-center px-4 py-12">
+      <main className="relative z-10 mx-auto flex w-full min-w-0 max-w-md flex-col items-center px-4 py-10 sm:py-12">
         <div className="mb-10 text-center">
           <h1 className="mb-1 text-3xl font-bold text-black">ArenaManager</h1>
           <p className="text-sm text-[#5c5f60]">
@@ -98,7 +98,7 @@ export default function Register() {
           </p>
         </div>
 
-        <div className="w-full rounded-xl border border-[#cfc4c5] bg-white p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+        <div className="w-full rounded-xl border border-[#cfc4c5] bg-white p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] sm:p-8">
           <form className="space-y-6" onSubmit={onSubmit}>
             <div className="space-y-1">
               <label
@@ -349,7 +349,7 @@ export default function Register() {
       </main>
 
       <footer className="relative z-10 mt-auto w-full border-t border-[#cfc4c5] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 md:flex-row md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:px-6 md:flex-row md:px-10">
           <div className="text-lg font-bold text-black">ArenaManager</div>
           <p className="text-center text-sm text-[#5c5f60] md:text-left">
             © {new Date().getFullYear()} ArenaManager. Gestión profesional de torneos.

@@ -131,11 +131,11 @@ export default function TorneoCard({ torneo }: { torneo: TorneoResumen }) {
     cupoLleno ? "bg-amber-600" : pct >= 75 ? "bg-amber-500" : "bg-black";
 
   return (
-    <article className="rounded-2xl border border-[#cfc4c5] bg-white p-8 shadow-sm transition-shadow hover:shadow-md">
+    <article className="rounded-2xl border border-[#cfc4c5] bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-6 md:p-8">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 flex-1 gap-6">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#cfc4c5] bg-[#eeeeee] text-xl font-bold text-[#1b1b1b]">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#cfc4c5] bg-[#eeeeee] text-lg font-bold text-[#1b1b1b] sm:h-24 sm:w-24 sm:text-xl">
               {inicialesTipo(torneo.tipoVideojuego?.nombre)}
             </div>
 
@@ -154,7 +154,7 @@ export default function TorneoCard({ torneo }: { torneo: TorneoResumen }) {
                     <span className="text-sm text-[#5c5f60]">• {b.sub}</span>
                   ) : null}
                 </div>
-                <h3 className="text-2xl font-bold leading-tight text-[#1b1b1b]">
+                <h3 className="text-xl font-bold leading-tight text-[#1b1b1b] sm:text-2xl">
                   {torneo.nombre}
                 </h3>
                 <p className="mt-1 text-base text-[#5c5f60]">

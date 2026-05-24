@@ -35,8 +35,8 @@ export default function Login() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f9f9f9] font-sans text-[#1b1b1b]">
       <ArenaHeader bg="white" />
-      <main className="flex flex-1 items-center justify-center px-5 py-12">
-        <div className="w-full max-w-[440px]">
+      <main className="flex min-w-0 flex-1 items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+        <div className="w-full min-w-0 max-w-[440px]">
           <div className="mb-10 flex flex-col items-center text-center">
             <div className="mb-4">
               <span className="material-symbols-outlined text-5xl text-black">
@@ -51,7 +51,7 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-[#cfc4c5] bg-white p-8 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+          <div className="rounded-xl border border-[#cfc4c5] bg-white p-5 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] sm:p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold text-[#1b1b1b]">
                 Iniciar Sesión
@@ -192,7 +192,7 @@ export default function Login() {
       </main>
 
       <footer className="w-full border-t border-[#cfc4c5] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-6 sm:px-6 md:flex-row md:px-10">
           <div className="flex flex-wrap items-center justify-center gap-2 text-sm md:justify-start">
             <span className="font-semibold text-black">ArenaManager</span>
             <span className="text-[#5c5f60]">|</span>

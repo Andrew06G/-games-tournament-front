@@ -401,11 +401,11 @@ export default function TorneoBracket() {
     <div className="min-h-screen bg-[#f9f9f9] font-sans text-black antialiased">
       <ArenaHeader active="torneos" bg="white" />
 
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <header className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-center">
-          <div>
+      <main className="mx-auto min-w-0 max-w-7xl px-4 py-8 sm:px-6 sm:py-10 md:px-10">
+        <header className="mb-8 flex flex-col justify-between gap-6 sm:mb-12 md:flex-row md:items-center">
+          <div className="min-w-0">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <h1 className="text-4xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl md:text-4xl">
                 {t?.nombre ?? "Torneo"}
               </h1>
               {esOrg ? (
@@ -538,7 +538,7 @@ export default function TorneoBracket() {
         {columnas.length > 0 ? (
           <div className="overflow-x-auto rounded-xl border border-gray-200 bg-gradient-to-b from-white to-gray-50/80 shadow-sm">
             <div
-              className="flex min-w-max gap-6 px-6 py-10"
+              className="flex min-w-max gap-4 px-4 py-8 sm:gap-6 sm:px-6 sm:py-10"
               style={{ minHeight: bracketLayout.height }}
             >
               {columnas.map((col, colIdx) => {
@@ -688,7 +688,7 @@ export default function TorneoBracket() {
       </main>
 
       <footer className="mt-20 w-full border-t border-gray-200 bg-gray-100">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 py-10 md:flex-row">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-10 sm:px-6 md:flex-row md:px-10">
           <div>
             <p className="text-xl font-bold">ArenaManager</p>
             <p className="text-sm text-gray-500">

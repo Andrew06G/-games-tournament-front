@@ -73,7 +73,7 @@ export default function ResultadosHub() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f9f9f9] font-sans text-[#1b1b1b]">
       <ArenaHeader active="resultados" bg="gray" />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10 md:px-10">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10 md:px-10">
         <h1 className="text-3xl font-bold text-black">Últimos resultados</h1>
         <p className="mt-2 text-sm text-[#5c5f60]">
           Enfrentamientos validados recientemente. Las finales destacan al
