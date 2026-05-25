@@ -1,0 +1,42 @@
+# =============================================================================
+# DockerFilePruebas
+#
+# Instala dependencias según package-lock.json, compila el frontend (tsc + Vite)
+# y ejecuta todas las pruebas unitarias con cobertura (Vitest + v8).
+#
+# Uso:
+#   docker build -f DockerFilePruebas -t torneo-front-pruebas .
+#
+# Si el build o alguna prueba falla, la imagen no se completa (exit code != 0).
+# El informe de cobertura queda en /app/coverage dentro de la imagen.
+#
+# Node 22 LTS — alineado con el README del proyecto (20 LTS o 22).
+# =============================================================================
+
+FROM node:22-bookworm-slim
+
+LABEL org.opencontainers.image.title="torneo-videojuegos-front-pruebas"
+LABEL org.opencontainers.image.description="Build, unit tests, and coverage for the tournament frontend"
+
+WORKDIR /app
+
+# Variables requeridas por Vite en build y por Vitest (vite.config.ts → test.env)
+ENV CI=true \
+    VITE_API_URL=http://localhost:3000/api \
+    VITE_SOCKET_URL=http://localhost:3000
+
+# Instalación según package.json (+ package-lock.json cuando esté sincronizado).
+# Preferimos npm ci (versiones exactas del lock); si el lock no incluye devDeps de prueba, npm install.
+COPY package.json package-lock.json ./
+RUN npm ci || npm install --no-audit --no-fund
+
+COPY . .
+
+# 1) Compilación de producción (TypeScript project references + Vite bundle → dist/)
+RUN npm run build
+
+# 2) Pruebas unitarias + cobertura (consola + carpeta coverage/)
+RUN npm run test:coverage
+
+# 3) Se deja la imagen con un mando genérico para que el contenedor siga activo
+CMD ["tail", "-f", "/dev/null"]
